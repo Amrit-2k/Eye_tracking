@@ -4,19 +4,18 @@ import cv2
 
 import pandas as pd
 import numpy as np
-import os
 
 # video capture
 cap = cv2.VideoCapture(0)
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 #write video in current directory
-
+import os
 
 counter=1
 current_dir = os.getcwd()
 
 
-new_name = 'output'
+new_name = '13-12/output'
 
 
 
@@ -24,8 +23,7 @@ if os.path.exists(new_name + '.avi'):
             new_name = new_name + str(counter)
             counter += 1
     
-out = cv2.VideoWriter(new_name+'.avi', fourcc, 20.0, (640, 480))            
-
+out = cv2.VideoWriter(new_name+'.avi', fourcc, 20.0, (640, 480))         
 
 # create main function
 
@@ -33,8 +31,6 @@ x2_list = []
 counter_list = []
 while True:
     # Capture frame-by-frame
-    
-    
 
     if (cap.isOpened() == False):
         print("Error opening video stream or file")
@@ -82,11 +78,12 @@ while True:
         font = cv2.FONT_HERSHEY_SIMPLEX
         x2 = x + int(w / 2)
         y2 = y + int(h / 2)
-        x2_list.append(x2)
+       
         cv2.putText(frame, 'x: ' + str(x2) + ' y: ' + str(y2), (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        
+        x2_list.append(x2)
         df = pd.DataFrame(x2_list)
-        
+        break
+    
         
         #add 1 to file name if same file name is used
         
@@ -101,23 +98,16 @@ while True:
     cv2.imshow('gray', frame)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
-        excel_name = 'output'
-        counter=0
+        #check if save file already exists
         
-        if os.path.exists(excel_name+ '.csv'):
-            execel_name = excel_name + str(counter)
-            counter += 1
-        df.to_csv(excel_name + '.csv')
-            
         
-        cap.release()
-        out.release()
         break
 
     # make the code into
 
 
 
-
+cap.release()
+out.release()
 cv2.destroyAllWindows()
 
