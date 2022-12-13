@@ -10,7 +10,7 @@ We started by using a pre-existing video that consisted of an eye with frequent 
 
 The video was converted into greyscale to make the black area (pupil) more visible. 
 
-The code developed tracked the darkest part of the video which was the pupil. This was done using threshold where the black sections were outlined with contours to demonstrate a visual representation. 
+The code tracked the darkest part of the video which was the pupil. This was done using threshold where the black sections were outlined with contours to demonstrate a visual representation. 
 
 The Gaussian blur made the image smooth so that the image was less pixilated and easier to track.
 
