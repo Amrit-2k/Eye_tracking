@@ -57,28 +57,33 @@ while True:
     # Our operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # introduce threshold to make image black and white and make the eye more visible
-    _, threshold = cv2.threshold(gray, 20, 255, cv2.THRESH_BINARY)
+    _, threshold = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY_INV)
     # introduce blur to make the image more clear
-    blur = cv2.GaussianBlur(threshold, (5, 5), 0)
-    # introduce canny to make the image more clear
-    canny = cv2.Canny(blur, 200, 200)
-    # introduce dilation to make the image more clear
-    kernel = np.ones((5, 5))
+    blur = cv2.GaussianBlur(threshold, (7, 7), 0)
+    
+    #make image more stable
+    canny = cv2.Canny(blur, 50, 150)
    
     rows, cols, _ = frame.shape
     contours, _ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # introduce contours to make the image more clear
-    contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=True)
+    contours = sorted(contours, key=lambda x: cv2.contourArea(x), reverse=  False)
     # introduce contours to make the image more clear
     
   
     for cnt in contours:
+
+
+
         (x, y, w, h) = cv2.boundingRect(cnt)
         #   introduce contours to make the image more clear
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
         cv2.line(frame, (x + int(w / 2), 0), (x + int(w / 2), rows), (0, 255, 0), 2)
         cv2.line(frame, (0, y + int(h / 2)), (cols, y + int(h / 2)), (0, 255, 0), 2)
+
+
+        #
         
         cv2.circle(frame, (x + int(w / 2), y + int(h / 2)), 2, (0, 0, 255), 2)
         
@@ -90,9 +95,15 @@ while True:
         
         
         break
+
+    # only add x2 to list if x2 range is between 0 and 400
+    
     x2 = x + int(w / 2)
     y2 = y + int(h / 2)
-    x2_list.append(x2)
+    if x2 > 0 and x2 < 400:
+        x2_list.append(x2)
+    else:
+        x2_list.append(0)
     
     string_time = time.strftime("%S", time.gmtime(time.time()-start_time))
     counter_list.append(string_time)
@@ -105,7 +116,7 @@ while True:
     
     # Display the resulting frame
     cv2.imshow('gray', frame)
-    cv2.imshow('pink', canny)
+    #cv2.imshow('pink', canny)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         
@@ -145,3 +156,6 @@ cv2.destroyAllWindows()
 
         
 
+#fix import open cv library error
+#fix import pandas library error
+#fix import numpy library error
