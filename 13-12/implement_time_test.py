@@ -1,69 +1,73 @@
 import cv2
-# find cv2 library
-# Create a VideoCapture object and read from input file
-
 import pandas as pd
 import numpy as np
 import time
-
-# video capture
-cap = cv2.VideoCapture(0)
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#write video in current directory
 import os
 
-counter=1
-new_name = '13-12/video'
-start_time = time.time()
-#check if new_name already exists
-while os.path.exists(new_name+'.avi'):
-    new_name = '13-12/video'+str(counter)
-    counter+=1
+FPS= 20.0
+FRAME_SIZE = (640, 480)
 
-#check if save file already exists
-out = cv2.VideoWriter(new_name+'.avi', fourcc, 20.0, (640, 480))
+OUTPUT_VIDEO_NAME = 'output'
+OUTPUT_VIDEO_EXTENSION = '.avi'
+
+OUTPUT_FILE_NAME = 'excel'
+OUTPUT_FILE_EXTENSION = '.csv'
 
 
+def get_file_name(file_name, file_extension):    
+
+   return file_name + file_extension
 
 
+# video capture
+def initialise_cam():
+    try:
+        cap = cv2.VideoCapture(0)
 
-#start timer
-
-
-
-
-        
-
-start_time = time.time()
-
-
-
-# create main function
-
-x2_list = []
-counter_list = []
-while True:
-    
-    
-    if (cap.isOpened() == False):
+    except:
         print("Error opening video stream or file")
+    
+    return cap
 
-    ret, frame = cap.read()
-    if ret == True:
-        # write the frame
-        out.write(frame)
+def initialise_video_writer(file_path):
       
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  
+    #check if save file already exists
+    out = cv2.VideoWriter( file_path, fourcc, FPS, (FRAME_SIZE))
+    return out
+
+def check_if_file_exists(file_path):
+    if os.path.exists(file_path):
+        return True
+    return False
+
+def create_new_file_name(file_name, file_extension, file_count):
+    
+    file_name = file_name + str(file_count)
+    
+    file_path = get_file_name(file_name, file_extension)
+
+    if check_if_file_exists(file_path):
+        
+        file_count += 1
+        create_new_file_name(file_name, file_extension, file_count) 
+
+    return file_path
+
+
+def edit_frame(frame):
+    x2=0
+
     frame = frame[100:500, 100:500]
     # Our operations on the frame come here
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     # introduce threshold to make image black and white and make the eye more visible
     _, threshold = cv2.threshold(gray, 15, 255, cv2.THRESH_BINARY_INV)
     # introduce blur to make the image more clear
-    blur = cv2.GaussianBlur(threshold, (7, 7), 0)
-    
+    blur = cv2.GaussianBlur(threshold, (7, 7), 0)    
     #make image more stable
-    canny = cv2.Canny(blur, 50, 150)
-   
+    canny = cv2.Canny(blur, 50, 150)      
+ 
     rows, cols, _ = frame.shape
     contours, _ = cv2.findContours(canny, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     # introduce contours to make the image more clear
@@ -73,89 +77,86 @@ while True:
   
     for cnt in contours:
 
-
-
         (x, y, w, h) = cv2.boundingRect(cnt)
         #   introduce contours to make the image more clear
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
         cv2.line(frame, (x + int(w / 2), 0), (x + int(w / 2), rows), (0, 255, 0), 2)
-        cv2.line(frame, (0, y + int(h / 2)), (cols, y + int(h / 2)), (0, 255, 0), 2)
-
-
-        #
-        
+        cv2.line(frame, (0, y + int(h / 2)), (cols, y + int(h / 2)), (0, 255, 0), 2)        
         cv2.circle(frame, (x + int(w / 2), y + int(h / 2)), 2, (0, 0, 255), 2)
         
         font = cv2.FONT_HERSHEY_SIMPLEX
+
         x2 = x + int(w / 2)
-        y2 = y + int(h / 2)     
+        y2 = y + int(h / 2)    
         
-        cv2.putText(frame, 'x: ' + str(x2) + ' y: ' + str(y2), (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
-        
-        
+        cv2.putText(frame, 'x: ' + str(x2) + ' y: ' + str(y2), (10, 50), font, 1, (255, 255, 255), 2, cv2.LINE_AA)       
         break
 
-    # only add x2 to list if x2 range is between 0 and 400
+    return frame, x2
+
+
+
+def run(count):
     
-    x2 = x + int(w / 2)
-    y2 = y + int(h / 2)
-    if x2 > 0 and x2 < 400:
+    time_list = []
+    x2_list = []
+    start_time = time.time()
+    cap = initialise_cam()
+    file_path = create_new_file_name(OUTPUT_VIDEO_NAME, OUTPUT_VIDEO_EXTENSION, count)    
+    out = initialise_video_writer(file_path)    
+
+    while True:
+        ret, frame = cap.read()
+        if ret == True:
+            # write the frame
+            frame, x2 = edit_frame(frame)    
+            out.write(frame) 
+        else:
+            break
+
+        string_time = time.strftime("%S", time.gmtime(time.time()-start_time))
+        
+        time_list.append(string_time)
         x2_list.append(x2)
-    else:
-        x2_list.append(0)
+
+        cv2.imshow('frame', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            
+            exit()
+            
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+    return time_list, x2_list
+
+def save_to_csv(time_list, x2_list, file_count):
     
-    string_time = time.strftime("%S", time.gmtime(time.time()-start_time))
-    counter_list.append(string_time)
-   
         
+    x_values=np.array(x2_list)
+    time_values=np.array(time_list)
+    df = pd.DataFrame({'time': time_values,  'x Value': x_values})
 
-   
- 
-   
+    #check if file already exists
+    file_path = create_new_file_name(OUTPUT_FILE_NAME, OUTPUT_FILE_EXTENSION, file_count)
     
-    # Display the resulting frame
-    cv2.imshow('gray', frame)
-    #cv2.imshow('pink', canny)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        
-        
-       
-       
-        
-        break
-        
-x2_g=np.array(x2_list)
-y2_g=np.array(counter_list)
-df = pd.DataFrame({'x': x2_g,  'y': y2_g})
+    #add df1 and df2 to csv file with two columns
+    df.to_csv(file_path, index=False)
 
 
-#save both x and y coordinates in one csv file
+
+
+
+def main():
+    count = 1
+
+    while True:
+             
+        time_list, x2_list = run(count)
+        save_to_csv(time_list, x2_list, count)
+        count += 1
+
+if __name__ == '__main__':
+    main()
     
-count=1
-file_name = '13-12/list'
-while os.path.exists(file_name+'.csv'):
-    file_name = '13-12/list'+str(count)
-    count+=1
-    
-#add df1 and df2 to csv file with two columns
-
-df.to_csv(file_name+'.csv', index=False)
-
-
-cap.release()
-out.release()
-cv2.destroyAllWindows()
-
-#check how long one loop takes
-
-
-
-
-
-        
-
-#fix import open cv library error
-#fix import pandas library error
-#fix import numpy library error
