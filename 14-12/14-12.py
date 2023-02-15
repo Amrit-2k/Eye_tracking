@@ -137,17 +137,6 @@ cap.release()
 out.release()
 cv2.destroyAllWindows()
 
-#check how long one loop takes
-
-# add to github command
-
-# git add .
-    
-# git commit -m "add new file"
-
-# git push origin master
-
-# git pull origin master
 
 
 
